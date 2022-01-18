@@ -166,6 +166,7 @@ int main(void)
   HAL_TIM_PWM_Start(&htim10, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim11, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2); // PWM para controlar el servo
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 150); // Init servo
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -265,14 +266,14 @@ int main(void)
 // Servos
 
 	  if(!muchosol && persianaarriba){
-		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 200);
-		  HAL_Delay(1000);
+		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 100); // Baja
+		  HAL_Delay(2350);
 		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 150); //Stop
 		  persianaarriba=0;
 	  }
 	  if (muchosol && !persianaarriba){
-		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 100);
-		  HAL_Delay(1000);
+		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 200); // Sube
+		  HAL_Delay(2500);
 		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 150); //Stop
 		  persianaarriba=1;
 	  }
