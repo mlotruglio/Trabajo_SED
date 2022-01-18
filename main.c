@@ -48,6 +48,8 @@ TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim5;
 TIM_HandleTypeDef htim8;
 TIM_HandleTypeDef htim9;
+TIM_HandleTypeDef htim10;
+TIM_HandleTypeDef htim11;
 
 /* USER CODE BEGIN PV */
 uint32_t tiempo_a;
@@ -57,6 +59,7 @@ int luz=0;
 int fin_temp_3=0;
 int fin_temp_4=0;
 int fin_temp_5=0;
+int l1on=0, l2on=0, l3on=0;
 
 uint16_t AD_RES = 0;
 uint16_t AD_PAN = 0;
@@ -73,6 +76,8 @@ static void MX_ADC1_Init(void);
 static void MX_TIM9_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_TIM8_Init(void);
+static void MX_TIM10_Init(void);
+static void MX_TIM11_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -152,8 +157,12 @@ int main(void)
   MX_TIM9_Init();
   MX_ADC2_Init();
   MX_TIM8_Init();
+  MX_TIM10_Init();
+  MX_TIM11_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_PWM_Start(&htim9, TIM_CHANNEL_1); // PWM del Potenciómetro - LED
+  HAL_TIM_PWM_Start(&htim9, TIM_CHANNEL_1); // PWM del Potenciómetro - LEDs
+  HAL_TIM_PWM_Start(&htim10, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim11, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2); // PWM para controlar el servo
   /* USER CODE END 2 */
 
@@ -162,23 +171,34 @@ int main(void)
   while (1)
   {
 	  if(flag==1){
-		  HAL_TIM_Base_Start_IT(&htim2);
+		  HAL_TIM_Base_Start_IT(&htim2); // comienza temporizador para pulsaciones boton
 	  }
 
 	  if(luz==1){
-		  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_1);
-		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 100);
+		  if (l1on) l1on=0;
+		  else l1on=1;
+		  //HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_1);
 		  luz=0;
+
+
+		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 100);
 	  }
 	  else if(luz==2){
-		  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_3);
-		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 150);
+		  if (l2on) l2on=0;
+		  else l2on=1;
+		  //HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_3);
 		  luz=0;
+
+
+		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 150);
 	  }
 	  else if(luz==3){
-		  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_5);
-		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 200);
+		  if (l3on) l3on=0;
+		  else l3on=1;
+		  //HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_5);
 		  luz=0;
+
+		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 200);
 	  }
 	  else luz=0;
 
@@ -186,36 +206,50 @@ int main(void)
 
 	  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1)==0){
 		  HAL_TIM_Base_Start_IT(&htim3);
-		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, 1);
+		  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, 1);
+		  l1on=1;
 	  }
 	  if(fin_temp_3){
-		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, 0);
+		  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, 0);
 		  fin_temp_3=0;
+		  l1on=0;
 	  }
 
 	  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2)==0){
 		  HAL_TIM_Base_Start_IT(&htim4);
-		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, 1);
+		  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, 1);
+		  l2on=1;
 	  }
 	  if(fin_temp_4){
-		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, 0);
+		  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, 0);
 		  fin_temp_4=0;
+		  l2on=0;
 	  }
+
 	  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3)==0){
 		  HAL_TIM_Base_Start_IT(&htim5);
-		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, 1);
+		  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, 1);
+		  l3on=1;
 	  }
 	  if(fin_temp_5){
-		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, 0);
+		  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, 0);
 		  fin_temp_5=0;
+		  l3on=0;
 	  }
 
 	  HAL_ADC_Start_IT(&hadc1); // Potenciómetro
-	  __HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, AD_RES<<4); // Actualizar ciclo trabajo PWM con último valor del AD_RES
-
 	  HAL_ADC_Start_IT(&hadc2); // Panel solar
 	  if(AD_PAN>3000) HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, 1);
 	  else HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, 0);
+
+	  if(l1on)__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, AD_RES<<4); // Si esta apagado, se enciende
+	  else __HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 0); // Si esta encendido, se apaga
+
+	  if(l2on)__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, AD_RES<<4);
+	  else __HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 0);
+
+	  if(l3on)__HAL_TIM_SET_COMPARE(&htim11, TIM_CHANNEL_1, AD_RES<<4);
+	  else __HAL_TIM_SET_COMPARE(&htim11, TIM_CHANNEL_1, 0);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -675,6 +709,98 @@ static void MX_TIM9_Init(void)
 }
 
 /**
+  * @brief TIM10 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM10_Init(void)
+{
+
+  /* USER CODE BEGIN TIM10_Init 0 */
+
+  /* USER CODE END TIM10_Init 0 */
+
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM10_Init 1 */
+
+  /* USER CODE END TIM10_Init 1 */
+  htim10.Instance = TIM10;
+  htim10.Init.Prescaler = 0;
+  htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim10.Init.Period = 65535;
+  htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim10) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim10, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM10_Init 2 */
+
+  /* USER CODE END TIM10_Init 2 */
+  HAL_TIM_MspPostInit(&htim10);
+
+}
+
+/**
+  * @brief TIM11 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM11_Init(void)
+{
+
+  /* USER CODE BEGIN TIM11_Init 0 */
+
+  /* USER CODE END TIM11_Init 0 */
+
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM11_Init 1 */
+
+  /* USER CODE END TIM11_Init 1 */
+  htim11.Instance = TIM11;
+  htim11.Init.Prescaler = 0;
+  htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim11.Init.Period = 65535;
+  htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim11) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim11, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM11_Init 2 */
+
+  /* USER CODE END TIM11_Init 2 */
+  HAL_TIM_MspPostInit(&htim11);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -689,9 +815,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_5|GPIO_PIN_7, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PA0 */
   GPIO_InitStruct.Pin = GPIO_PIN_0;
@@ -705,8 +832,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PD1 PD3 PD5 PD7 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_5|GPIO_PIN_7;
+  /*Configure GPIO pin : PD7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
