@@ -60,6 +60,7 @@ int fin_temp_3=0;
 int fin_temp_4=0;
 int fin_temp_5=0;
 int l1on=0, l2on=0, l3on=0;
+int muchosol=0;
 
 uint16_t AD_RES = 0;
 uint16_t AD_PAN = 0;
@@ -170,6 +171,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  HAL_ADC_Start_IT(&hadc1); // Potenciómetro
+	  HAL_ADC_Start_IT(&hadc2); // Panel solar
+
+
+// Boton
 	  if(flag==1){
 		  HAL_TIM_Base_Start_IT(&htim2); // comienza temporizador para pulsaciones boton
 	  }
@@ -204,44 +210,56 @@ int main(void)
 
 
 
-	  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1)==0){
-		  HAL_TIM_Base_Start_IT(&htim3);
-		  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, 1);
-		  l1on=1;
-	  }
-	  if(fin_temp_3){
-		  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, 0);
-		  fin_temp_3=0;
-		  l1on=0;
+
+// IR (funciona solo si no hay mucho sol)
+	  if(!muchosol){
+		  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1)==0){
+			  HAL_TIM_Base_Start_IT(&htim3);
+			  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, 1);
+			  l1on=1;
+		  }
+		  if(fin_temp_3){
+			  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, 0);
+			  fin_temp_3=0;
+			  l1on=0;
+		  }
+
+		  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2)==0){
+			  HAL_TIM_Base_Start_IT(&htim4);
+			  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, 1);
+			  l2on=1;
+		  }
+		  if(fin_temp_4){
+			  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, 0);
+			  fin_temp_4=0;
+			  l2on=0;
+		  }
+
+		  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3)==0){
+			  HAL_TIM_Base_Start_IT(&htim5);
+			  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, 1);
+			  l3on=1;
+		  }
+		  if(fin_temp_5){
+			  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, 0);
+			  fin_temp_5=0;
+			  l3on=0;
+		  }
 	  }
 
-	  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2)==0){
-		  HAL_TIM_Base_Start_IT(&htim4);
-		  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, 1);
-		  l2on=1;
+
+// Salida panel solar
+	  if(AD_PAN>3000){
+		  muchosol=1;
+		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, 1);
 	  }
-	  if(fin_temp_4){
-		  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, 0);
-		  fin_temp_4=0;
-		  l2on=0;
+	  else{
+		  muchosol=0;
+		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, 0);
 	  }
 
-	  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3)==0){
-		  HAL_TIM_Base_Start_IT(&htim5);
-		  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, 1);
-		  l3on=1;
-	  }
-	  if(fin_temp_5){
-		  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, 0);
-		  fin_temp_5=0;
-		  l3on=0;
-	  }
 
-	  HAL_ADC_Start_IT(&hadc1); // Potenciómetro
-	  HAL_ADC_Start_IT(&hadc2); // Panel solar
-	  if(AD_PAN>3000) HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, 1);
-	  else HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, 0);
-
+// LEDs
 	  if(l1on)__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, AD_RES<<4); // Si esta apagado, se enciende
 	  else __HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 0); // Si esta encendido, se apaga
 
