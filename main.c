@@ -61,6 +61,7 @@ int fin_temp_4=0;
 int fin_temp_5=0;
 int l1on=0, l2on=0, l3on=0;
 int muchosol=0;
+int persianaarriba=0;
 
 uint16_t AD_RES = 0;
 uint16_t AD_PAN = 0;
@@ -185,26 +186,18 @@ int main(void)
 		  else l1on=1;
 		  //HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_1);
 		  luz=0;
-
-
-		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 100);
 	  }
 	  else if(luz==2){
 		  if (l2on) l2on=0;
 		  else l2on=1;
 		  //HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_3);
 		  luz=0;
-
-
-		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 150);
 	  }
 	  else if(luz==3){
 		  if (l3on) l3on=0;
 		  else l3on=1;
 		  //HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_5);
 		  luz=0;
-
-		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 200);
 	  }
 	  else luz=0;
 
@@ -268,6 +261,21 @@ int main(void)
 
 	  if(l3on)__HAL_TIM_SET_COMPARE(&htim11, TIM_CHANNEL_1, AD_RES<<4);
 	  else __HAL_TIM_SET_COMPARE(&htim11, TIM_CHANNEL_1, 0);
+
+// Servos
+
+	  if(!muchosol && persianaarriba){
+		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 200);
+		  HAL_Delay(1000);
+		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 150); //Stop
+		  persianaarriba=0;
+	  }
+	  if (muchosol && !persianaarriba){
+		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 100);
+		  HAL_Delay(1000);
+		  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 150); //Stop
+		  persianaarriba=1;
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
