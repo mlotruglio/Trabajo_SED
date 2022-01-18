@@ -59,9 +59,9 @@ int luz=0;
 int fin_temp_3=0;
 int fin_temp_4=0;
 int fin_temp_5=0;
-int l1on=0, l2on=0, l3on=0;
-int muchosol=0;
-int persianaarriba=0;
+int l1on=0, l2on=0, l3on=0; 	// Variables para saber el estado de las luces
+int muchosol=0; 				// Variable que se pone a 1 si el panel soplar detecta gran cantidad de luz
+int persianaarriba=0; 			// Variable que se pone a 1 si la persiana está arriba
 
 uint16_t AD_RES = 0;
 uint16_t AD_PAN = 0;
@@ -87,8 +87,8 @@ static void MX_TIM11_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	tiempo_a = HAL_GetTick();
-	if(tiempo_a-tiempo_b>200){
+	tiempo_a = HAL_GetTick();  // Código antirrebotes
+	if(tiempo_a-tiempo_b>200){ // Despreciar los primeros 200 ms
 		flag++;
 		tiempo_b = HAL_GetTick();
 	}
@@ -179,25 +179,22 @@ int main(void)
 
 // Boton
 	  if(flag==1){
-		  HAL_TIM_Base_Start_IT(&htim2); // comienza temporizador para pulsaciones boton
+		  HAL_TIM_Base_Start_IT(&htim2); // Comienza temporizador para pulsaciones boton
 	  }
 
 	  if(luz==1){
 		  if (l1on) l1on=0;
 		  else l1on=1;
-		  //HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_1);
 		  luz=0;
 	  }
 	  else if(luz==2){
 		  if (l2on) l2on=0;
 		  else l2on=1;
-		  //HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_3);
 		  luz=0;
 	  }
 	  else if(luz==3){
 		  if (l3on) l3on=0;
 		  else l3on=1;
-		  //HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_5);
 		  luz=0;
 	  }
 	  else luz=0;
@@ -209,33 +206,27 @@ int main(void)
 	  if(!muchosol){
 		  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1)==0){
 			  HAL_TIM_Base_Start_IT(&htim3);
-			  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, 1);
 			  l1on=1;
 		  }
 		  if(fin_temp_3){
-			  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, 0);
 			  fin_temp_3=0;
 			  l1on=0;
 		  }
 
 		  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2)==0){
 			  HAL_TIM_Base_Start_IT(&htim4);
-			  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, 1);
 			  l2on=1;
 		  }
 		  if(fin_temp_4){
-			  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, 0);
 			  fin_temp_4=0;
 			  l2on=0;
 		  }
 
 		  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3)==0){
 			  HAL_TIM_Base_Start_IT(&htim5);
-			  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, 1);
 			  l3on=1;
 		  }
 		  if(fin_temp_5){
-			  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, 0);
 			  fin_temp_5=0;
 			  l3on=0;
 		  }
@@ -254,13 +245,13 @@ int main(void)
 
 
 // LEDs
-	  if(l1on)__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, AD_RES<<4); // Si esta apagado, se enciende
-	  else __HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 0); // Si esta encendido, se apaga
+	  if(l1on)__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, AD_RES*10); 		// Si esta apagado, se enciende
+	  else __HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 0); 				// Si esta encendido, se apaga
 
-	  if(l2on)__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, AD_RES<<4);
+	  if(l2on)__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, AD_RES*10);
 	  else __HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 0);
 
-	  if(l3on)__HAL_TIM_SET_COMPARE(&htim11, TIM_CHANNEL_1, AD_RES<<4);
+	  if(l3on)__HAL_TIM_SET_COMPARE(&htim11, TIM_CHANNEL_1, AD_RES*10);
 	  else __HAL_TIM_SET_COMPARE(&htim11, TIM_CHANNEL_1, 0);
 
 // Servos
